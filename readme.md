@@ -4,3 +4,7 @@ It consists of tow Parts:
 
  - An Arudino that stores the data on an SD card
  - A sofware that is able to create XLSX file reports and allows User managing
+ - 
+ 
+
+Please also refer to our [Wiki](https://github.com/slevon/NFCoffee/wiki)
