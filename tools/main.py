@@ -6,7 +6,7 @@ This is the GUI Managment Tool for NFCoffee
 
 
 
-    icons taken from http://dryicons.com
+icons taken from http://dryicons.com
 
 '''
 
@@ -108,10 +108,11 @@ class MainWidget(QWidget):
     def logNewSection(self):
             self.mTextEdit.append("<hr/>")
 
-    def logText(self,string,timestamp=True):
+    def logText(self, string, timestamp=True):
             if timestamp:
-                #self.mTextEdit.append("<hr/><span style=\"font: Trebuchet,sans-serif\">"+QDateTime().currentDateTimeUtc().toString("yyyy-MM-dd HH:mm:ss:")+"</span><br/>")
-                self.mTextEdit.append("<small style=\"color:gray\" >"+QDateTime().currentDateTimeUtc().toString("yyyy-MM-dd HH:mm:ss:")+"</small><br/>")
+                self.mTextEdit.append("<small style=\"color:gray\" >"
+                                      + QDateTime().currentDateTimeUtc().toString("yyyy-MM-dd HH:mm:ss:")
+                                      + "</small><br/>")
 
             self.mTextEdit.append(string.replace("\n","<br/>")+"<br/>")
 
@@ -159,18 +160,18 @@ class MainWidget(QWidget):
             except Exception as e:
                 print(e)
 
-    def markMinimumCoffees(self,minimum):
+    def markMinimumCoffees(self, minimum):
         rows = self.mTable.rowCount()
         cols = self.mTable.columnCount()
         for row in range(0, rows):
             #try:
                 count = int(self.mTable.item(row,2).text())
                 if count < minimum:
-                    for col in range(0,cols):
-                        self.mTable.item(row,col).setBackground(QColor(250,220,220))
+                    for col in range(0, cols):
+                        self.mTable.item(row,col).setBackground(QColor(250, 220, 220))
                 else:
-                    for col in range(0,cols):
-                        self.mTable.item(row,col).setBackground(QColor(255,255,255))
+                    for col in range(0, cols):
+                        self.mTable.item(row, col).setBackground(QColor(255, 255, 255))
             #except Exception as e:
             #    pass
 
@@ -197,7 +198,7 @@ class MyMainWindow(QMainWindow):
         self.mPopMenu = QMenu()
         self.mMainMenu = self.menuBar()
 
-        self.connect(self.mMainWidget.mTable,SIGNAL('customContextMenuRequested(QPoint)'), self.onContextMenu)
+        self.connect(self.mMainWidget.mTable, SIGNAL('customContextMenuRequested(QPoint)'), self.onContextMenu)
         #self.connect(self.mMainMenu,SIGNAL('triggered(QAction)'), self.onMainMenu)
         self.mMainMenu.triggered.connect(self.onMainMenu)
 
@@ -280,7 +281,8 @@ class MyMainWindow(QMainWindow):
                 print("Popup found: "+result.text())
 
     def onMainMenu(self, action):
-        print("mainMenu picked");
+        QMessageBox.critical(None, "Fehler Hauptmenü",
+                "<h2>:-( TODO</h2>")
 
     def initMenus(self):
         self.mActions.append(QAction("Klick",self))
@@ -308,7 +310,7 @@ class MyMainWindow(QMainWindow):
         self.mMainWidget.recalcAmount(price)
 
 
-    def updateMinimumCoffees(self,minimumCoffees):
+    def updateMinimumCoffees(self, minimumCoffees):
         self.mNFCoffee.setMinimumCoffees(minimumCoffees)
         self.mMainWidget.markMinimumCoffees(minimumCoffees)
 

@@ -65,14 +65,13 @@ class NFCoffee():
 
     def setPrice(self, price):
         self.mPrice = price
-        print('NFCoffee.setPrice: ' +str(self.mPrice))
+
 
     def price(self):
         return self.mPrice
 
     def setMinimumCoffees(self,minimumCoffeeAmount):
         self.mMinimumCoffees = minimumCoffeeAmount
-        print('NFCoffee.setMinimumCoffees: ' +str(self.mMinimumCoffees))
 
     def minimumCoffees(self):
         return self.mMinimumCoffees
