@@ -1,4 +1,5 @@
 FFEEDDCCBB	Roman Raekow
-AAEEDDCCBB	Aˆm‰n Raekoﬂ
+AAEEDDCCBB	A√∂m√§n Raeko√ü
 99EEDDCCBB	Bmag keinen Kaffee
 88EEDDCCBB	Zmag keinen Kaffee
+88EEDDCC34	J√ºrgen Zwo

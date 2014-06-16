@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
 __author__ = 'Roman'
 
 
@@ -8,7 +10,6 @@ import sys
 import os
 import time
 import zipfile
-
 
 
 class NFCoffee():
@@ -52,26 +53,20 @@ class NFCoffee():
         except Exception as e:
             raise Exception("File COUNT.TXT not found, or it contains errors")
 
-    '''
-        OLD ort the DICT by Name by creating a List with UUIDs in the correct order
-        #sortedCounts=sorted(counts.items(), key=lambda x: x[1]['name'])
-        #now we have a list like so
-        #[('AABBEE9F',{'uuid':'AABBEE9F','name':'Adam','count':3},
-        #  ...]
-
-        # Clear the old container to free memory
-        counts=None
-    '''
-
     def setPrice(self, price):
-        self.mPrice = price
-
+        try:
+            self.mPrice = price
+        except Exception as e:
+            raise Exception("Could not set PRICE")
 
     def price(self):
         return self.mPrice
 
-    def setMinimumCoffees(self,minimumCoffeeAmount):
-        self.mMinimumCoffees = minimumCoffeeAmount
+    def setMinimumCoffees(self, minimumCoffeeAmount):
+        try:
+            self.mMinimumCoffees = minimumCoffeeAmount
+        except Exception as e:
+            raise Exception("Could not set Minimum Coffees")
 
     def minimumCoffees(self):
         return self.mMinimumCoffees
@@ -82,10 +77,12 @@ class NFCoffee():
         # Create the excel sheet
         #################################
         # Create a workbook and add a worksheet.
-        if filename == None:
+        if filename is None:
             filename = 'Abrechnung_'+time.strftime("%Y-%m-%d_%H-%M-%S")
 
-        workbook = xlsxwriter.Workbook(filename + '.xlsx')
+        if not filename.endswith(".xlsx"):
+            filename += '.xlsx'
+        workbook = xlsxwriter.Workbook(filename )
         worksheet = workbook.add_worksheet('Kaffee-Abrechnung')
 
         # Add a number format for cells with money.
@@ -101,12 +98,12 @@ class NFCoffee():
         worksheet.write(0, 2, 'Betrag')
         worksheet.set_column(2, 2, 10, moneyFormat)
         worksheet.write(0, 3, '€/Kaffe:')
-        worksheet.write(0, 4, pPrice, moneyFormat)
+        worksheet.write(0, 4, self.mPrice, moneyFormat)
         # Iterate over the data and write it out row by row.
         # OLD Version without sorting for key, item in counts.items():
-        for item in self.mCounts:
-            worksheet.write(row, col, item[1]['name'])
-            worksheet.write(row, col + 1, item[1]['count'])
+        for key, item in self.data.items():
+            worksheet.write(row, col, item['name'])
+            worksheet.write(row, col + 1, item['count'])
             worksheet.write(row, col + 2, '=PRODUCT(E1,' + xl_rowcol_to_cell(row, col + 1) + ')')
             row += 1
 
@@ -117,7 +114,7 @@ class NFCoffee():
 
         workbook.close()
 
-        print('File: ' + filename + '.xlsx created')
+        print('File: ' + filename + ' created')
 
         #########################################
         ## Remove the old Count File and back it up
@@ -133,7 +130,7 @@ class NFCoffee():
         except (OSError, IOError) as e:
             pass
 
-        os.rename('COUNT.TXT', '~COUNT.TXT')
+        #os.rename('COUNT.TXT', '~COUNT.TXT')
 
     @property
     def getData(self):
@@ -144,5 +141,17 @@ class NFCoffee():
         self.errors=[]
         return erros
 
+    def deleteUser(self,UUID):
+        del self.data[UUID]
+
+    def addUser(self, uuid, name):
+        UUID = uuid.upper()
+        if UUID in self.data:
+            return False, "UUID wird schon verwendet."
+
+        self.data[UUID] = {'name': name, 'count': 0, 'uuid': UUID}
+
+        return True, "User "+name+" und UUID "+UUID+" hinzugefügt"
+        print(self.data)
 
 

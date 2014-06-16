@@ -1,10 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 '''
 This is the GUI Managment Tool for NFCoffee
-
-
-
 
 icons taken from http://dryicons.com
 
@@ -16,6 +13,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import configparser
+import  time
 
 import sys
 import json
@@ -29,6 +27,7 @@ class AddUserDialog(QDialog):
             self.mUuidLineEdit = None
 
             self.setWindowTitle("User hinzufügen")
+            
             self.mLayout=QGridLayout()
             self.mLayout.addWidget(QLabel('''
                 <h2><img src="icons/user.png" /> Nutzerdaten </h2>Geben sie hier die ID des Ausweises und den Nutzernamen an.<br/>
@@ -80,8 +79,7 @@ class MainWidget(QWidget):
         super(MainWidget, self).__init__(parent)
 
         self.mTable = QTableWidget(0,4,self)
-        header = [ "UUID", "Name", "Anzahl", "Betrag"]
-        self.mTable.setHorizontalHeaderLabels(header)
+
         self.mTable.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
         self.mTable.setContextMenuPolicy(Qt.CustomContextMenu)
         self.mTable.setSortingEnabled(True)
@@ -123,6 +121,8 @@ class MainWidget(QWidget):
         """
 
         self.mTable.clear()
+        header = [ "UUID", "Name", "Anzahl", "Betrag"]
+        self.mTable.setHorizontalHeaderLabels(header)
         self.mTable.setRowCount(0)
 
         for item in data:
@@ -164,16 +164,13 @@ class MainWidget(QWidget):
         rows = self.mTable.rowCount()
         cols = self.mTable.columnCount()
         for row in range(0, rows):
-            #try:
-                count = int(self.mTable.item(row,2).text())
-                if count < minimum:
-                    for col in range(0, cols):
-                        self.mTable.item(row,col).setBackground(QColor(250, 220, 220))
-                else:
-                    for col in range(0, cols):
-                        self.mTable.item(row, col).setBackground(QColor(255, 255, 255))
-            #except Exception as e:
-            #    pass
+            count = int(self.mTable.item(row,2).text())
+            if count < minimum:
+                for col in range(0, cols):
+                    self.mTable.item(row,col).setBackground(QColor(250, 220, 220))
+            else:
+                for col in range(0, cols):
+                    self.mTable.item(row, col).setBackground(QColor(255, 255, 255))
 
 ###########################################################################################################
 ###########################################################################################################
@@ -185,14 +182,13 @@ class MyMainWindow(QMainWindow):
         #init attributes:
 
         #We have our working Class, that will do all the work on the files:
-        #TODO NFC Class usage
+        #
         self.mNFCoffee = NFCoffee()
         self.mNFCoffee.readData()
 
         self.mMainWidget = MainWidget(self)
-
         self.setCentralWidget(self.mMainWidget)
-        self.resize(600,400)
+        self.resize(600, 400)
         self.statusBar().showMessage('Ready')
 
         self.mPopMenu = QMenu()
@@ -265,7 +261,7 @@ class MyMainWindow(QMainWindow):
         self.saveSettings()
         super(MyMainWindow, self).closeEvent(evnt)
 
-    def onContextMenu(self,point):
+    def onContextMenu(self, point):
 
 
         treeItem=self.mMainWidget.mTable.itemAt(point)
@@ -295,20 +291,33 @@ class MyMainWindow(QMainWindow):
         dia = AddUserDialog()
         dia.exec_()
     def deleteUser(self):
+        users=[]
+        for user in self.mNFCoffee.getData:
+            users.append(user['uuid'] + " - " + user['name'])
+        item=QInputDialog.getItem(self,"Benutzer löschen",
+                                  "<img src='icons/delete_user.png'/> User löschen<br>Dieser Vorgang kann nicht"
+                                  "rückgangig gemacht werden ",
+                                  users , editable=False)
         # TODO Delete user function
-        QMessageBox.critical(None, "Fehler Delete",
-                "<h2>:-( TODO</h2>")
+        result=QMessageBox.warning(None, "Löschen bestätigen",
+                "<h2>Löschen?</h2>Sind sie sicher das sie den User: <b>"
+                + item[0]
+                + "</b> löschen wollten?<br/>"
+                "Dieser Vorgang kann nicht rückgängig gemacht werden",
+                QDialogButtonBox.Ok, QDialogButtonBox.Cancel)
 
+        if result== QDialogButtonBox.Ok:
+            self.mNFCoffee.deleteUser(item[0].split(" - ")[0])
 
     def createReport(self):
-        # TODO REport/Export Function
-        QMessageBox.critical(None, "Fehler Report",
-                "<h2>:-( TODO</h2>")
+        filename=QFileDialog.getSaveFileName(self,
+                                    "Wähle einen Speicherort",
+                                    'Abrechnung_'+time.strftime("%Y-%m-%d_%H-%M-%S"))
+        self.mNFCoffee.export()
 
     def updatePrice(self, price):
         self.mNFCoffee.setPrice(price)
         self.mMainWidget.recalcAmount(price)
-
 
     def updateMinimumCoffees(self, minimumCoffees):
         self.mNFCoffee.setMinimumCoffees(minimumCoffees)
@@ -318,6 +327,7 @@ class MyMainWindow(QMainWindow):
         config = configparser.ConfigParser()
         config.read('NFCoffee.INI')
         #TODO all Config
+        config['COFFEE']={}
         config['COFFEE']['price'] = str(self.mNFCoffee.price())
         config['COFFEE']['minimumCoffees'] = str(self.mNFCoffee.minimumCoffees())
 
@@ -333,6 +343,7 @@ class MyMainWindow(QMainWindow):
         #TODO all Config
         self.aPriceBox.setValue(float(config['COFFEE']['price']))
         self.aMinimumBox.setValue(int(config['COFFEE']['minimumCoffees']))
+
 
 app = QApplication([])
 mW = MyMainWindow()
