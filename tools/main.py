@@ -256,7 +256,6 @@ class MyMainWindow(QMainWindow):
         #Show all errors
         self.mMainWidget.logText("\n".join(self.mNFCoffee.getErrors()))
 
-
     def closeEvent(self, evnt):
         self.saveSettings()
         super(MyMainWindow, self).closeEvent(evnt)
@@ -312,6 +311,13 @@ class MyMainWindow(QMainWindow):
                                     "Wähle einen Speicherort",
                                     'Abrechnung_'+time.strftime("%Y-%m-%d_%H-%M-%S"))
         self.mNFCoffee.export(filename)
+
+        QMessageBox.information(self,"Export erledigt",
+                                '''Die Daten wuredn exportiert.<br/>
+                                <b>Achtung:</b> Alle User, die die Mindestanzahl an Kaffees nicht erreicht haben
+                                wurden zurückgeschrieben, sodass ihre bisher getrunkenen Kaffees für den nächsten
+                                 Monat erhalten bleiben.
+                                ''')
 
     def updatePrice(self, price):
         self.mNFCoffee.setPrice(price)
