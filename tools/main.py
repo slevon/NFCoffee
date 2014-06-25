@@ -13,7 +13,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import configparser
-import  time
+import time
 
 import sys
 import json
@@ -262,8 +262,6 @@ class MyMainWindow(QMainWindow):
         super(MyMainWindow, self).closeEvent(evnt)
 
     def onContextMenu(self, point):
-
-
         treeItem=self.mMainWidget.mTable.itemAt(point)
         #find the toplevel item
         while treeItem.parent():
@@ -297,7 +295,7 @@ class MyMainWindow(QMainWindow):
         item=QInputDialog.getItem(self,"Benutzer löschen",
                                   "<img src='icons/delete_user.png'/> User löschen<br>Dieser Vorgang kann nicht"
                                   "rückgangig gemacht werden ",
-                                  users , editable=False)
+                                  users , editable = False)
         # TODO Delete user function
         result=QMessageBox.warning(None, "Löschen bestätigen",
                 "<h2>Löschen?</h2>Sind sie sicher das sie den User: <b>"
@@ -313,7 +311,7 @@ class MyMainWindow(QMainWindow):
         filename=QFileDialog.getSaveFileName(self,
                                     "Wähle einen Speicherort",
                                     'Abrechnung_'+time.strftime("%Y-%m-%d_%H-%M-%S"))
-        self.mNFCoffee.export()
+        self.mNFCoffee.export(filename)
 
     def updatePrice(self, price):
         self.mNFCoffee.setPrice(price)

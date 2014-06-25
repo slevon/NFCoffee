@@ -20,12 +20,14 @@ class NFCoffee():
         self.mMinimumCoffees = 8    # 3EUR at the beginning
         self.mPrice = 0.4             # 0,4 EU
         self.errors=[]
+        self.mPath=""
 
     def readData(self, path=""):
 
         #read the user file
+        self.mPath = path
         try:
-            with open(path + 'USER.TXT') as file:  # Use file to refer to the file object
+            with open(self.mPath + 'USER.TXT') as file:  # Use file to refer to the file object
                 for line in file:
                     uuid, name = line.replace("\n", '').split("\t", maxsplit=1)
                     #Check is we hav two keys in the file -> Something went terribly wrong
@@ -39,7 +41,7 @@ class NFCoffee():
 
         #read the coffe-file.
         try:
-            with open(path + 'COUNT.TXT') as file:  # Use file to refer to the file object
+            with open(self.mPath + 'COUNT.TXT') as file:  # Use file to refer to the file object
                 for line in file:
                     uuid, count = line.replace("\n", '').split("\t", maxsplit=1)
                     try:
@@ -119,18 +121,31 @@ class NFCoffee():
         #########################################
         ## Remove the old Count File and back it up
         #########################################
-        zip = zipfile.ZipFile("count.zip", "a")
-        zip.write("COUNT.TXT", filename + ".TXT")
+        backupFilename = 'COUNT_'+os.path.basename(filename).replace('.xlsx', '') + ".TXT"
+        zip = zipfile.ZipFile(self.mPath+"count.zip", "a")
+        i=0
+        while backupFilename in zip.namelist():
+            i += 1
+            backupFilename = 'COUNT_'+str(i)+"_"+os.path.basename(filename).replace('.xlsx', '') + ".TXT"
+        zip.write(self.mPath+"COUNT.TXT", backupFilename)
         zip.close()
 
         # Everthing is fine now, so delete the old Backup and write back the Counts of the users with
         # few coffes this month
         try:
-            os.remove('~COUNT.TXT')
+            os.remove(self.mPath+'~COUNT.TXT')
         except (OSError, IOError) as e:
             pass
 
-        #os.rename('COUNT.TXT', '~COUNT.TXT')
+        os.rename(self.mPath+'COUNT.TXT', self.mPath+'~COUNT.TXT')
+
+        #Now create a new File that contains all people with less than the min Amount
+        with open(self.mPath+'COUNT.TXT', 'w') as f:
+            for key, item in self.data.items():
+                if item['count'] < self.mMinimumCoffees:
+                    f.write(key+"\t"+str(item['count']).zfill(4)+"\n")
+
+
 
     @property
     def getData(self):
