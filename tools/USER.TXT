@@ -1,5 +1,4 @@
 FFEEDDCCBB	Roman Raekow
-AAEEDDCCBB	Aömän Raekoß
-99EEDDCCBB	Bmag keinen Kaffee
 88EEDDCCBB	Zmag keinen Kaffee
 88EEDDCC34	Jürgen Zwo
+99EEDDCCBB	Bmag keinen Kaffee

@@ -58,7 +58,7 @@ class AddUserDialog(QDialog):
 
 
     def getUUID(self):
-        return self.mUuidLineEdit.text()
+        return self.mUuidLineEdit.text().upper()
 
     def getName(self):
         return self.mNameEdit.text()
@@ -116,7 +116,6 @@ class MainWidget(QWidget):
 
     def initTable(self, data):
         """
-
         :param data: A List of dics with uuid,name and count as keys
         """
 
@@ -137,7 +136,7 @@ class MainWidget(QWidget):
             price.setTextAlignment(Qt.AlignRight)
             self.mTable.setItem(row, 3, price)
             #UUID
-            #For some verrrrry strange reason this line has to be the last in this loop
+            #For some verry strange reason this line has to be the last in this loop
             self.mTable.setItem(row, 0, self.__createItem(str(item['uuid'])))
 
 
@@ -158,16 +157,16 @@ class MainWidget(QWidget):
                 count = int(self.mTable.item(row,2).text())
                 self.mTable.item(row, 3).setText("{0:.2f} €".format((count*price)))
             except Exception as e:
-                print(e)
+                self.logText("recalcAmount"+str(e))
 
-    def markMinimumCoffees(self, minimum):
+    def markMinimumCoffees(self, minimumCoffees):
         rows = self.mTable.rowCount()
         cols = self.mTable.columnCount()
         for row in range(0, rows):
             count = int(self.mTable.item(row,2).text())
-            if count < minimum:
+            if count < minimumCoffees:
                 for col in range(0, cols):
-                    self.mTable.item(row,col).setBackground(QColor(250, 220, 220))
+                    self.mTable.item(row, col).setBackground(QColor(250, 220, 220))
             else:
                 for col in range(0, cols):
                     self.mTable.item(row, col).setBackground(QColor(255, 255, 255))
@@ -180,44 +179,38 @@ class MyMainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
         #init attributes:
-
         #We have our working Class, that will do all the work on the files:
         #
         self.mNFCoffee = NFCoffee()
-        self.mNFCoffee.readData()
+        try:
+            self.mNFCoffee.readData()
+        except Exception as e:
+            self.mMainWidget.logText("MyMainWindow.____init__"+str(e))
 
         self.mMainWidget = MainWidget(self)
         self.setCentralWidget(self.mMainWidget)
         self.resize(600, 400)
-        self.statusBar().showMessage('Ready')
 
         self.mPopMenu = QMenu()
         self.mMainMenu = self.menuBar()
 
         self.connect(self.mMainWidget.mTable, SIGNAL('customContextMenuRequested(QPoint)'), self.onContextMenu)
         #self.connect(self.mMainMenu,SIGNAL('triggered(QAction)'), self.onMainMenu)
-        self.mMainMenu.triggered.connect(self.onMainMenu)
+        #self.mMainMenu.triggered.connect(self.onMainMenu)
 
         #will hold all the actions in order do find which one was triggerd by the contex menu
         self.mActions = []
         self.initMenus()
 
         #init Toolbar
-        self.toolbarUser = self.addToolBar('User')
-        self.toolbarUser.setFloatable(False)
-
-        self.aAddUser = QAction(QIcon('icons/add_user.png'), 'User hinzufügen', self)
-        self.aAddUser.setShortcut('Ctrl++')
-        self.aAddUser.triggered.connect(self.addUser)
-        self.toolbarUser.addAction(self.aAddUser)
-        self.aDeleteUser = QAction(QIcon('icons/delete_user.png'), 'User entfernen', self)
-        self.aDeleteUser.setShortcut('Ctrl+-')
-        self.aDeleteUser.triggered.connect(self.deleteUser)
-        self.toolbarUser.addAction(self.aDeleteUser)
         #options
         self.toolbarOptions = self.addToolBar('Options')
         self.toolbarOptions.setFloatable(False)
 
+        self.aRefresh = QAction(QIcon('icons/refresh.png'), 'Liste neu laden', self)
+        self.aRefresh.setShortcut('F5')
+        self.aRefresh.triggered.connect(self.refreshTableView)
+        self.toolbarOptions.addAction(self.aRefresh)
         self.aExport = QAction(QIcon('icons/download_page.png'), 'Report erstellen', self)
         self.aExport.setShortcut('Ctrl+E')
         self.aExport.triggered.connect(self.createReport)
@@ -229,7 +222,6 @@ class MyMainWindow(QMainWindow):
         self.aPriceBox = QDoubleSpinBox()
         self.aPriceBox.setSingleStep(0.05)
         self.aPriceBox.setSuffix("€")
-        # TODO Save and restore settings
         self.aPriceBox.setValue(self.mNFCoffee.price())
         self.aPriceBox.valueChanged.connect(self.updatePrice)
         self.toolbarOptions.addWidget(self.aPriceBox)
@@ -239,57 +231,80 @@ class MyMainWindow(QMainWindow):
         self.aMinimumBox = QSpinBox()
         self.aMinimumBox.setToolTip("Geben sie hier die Mindestanzahl der Kaffees an, die erreicht werden muss damit die"
                                     " Kaffees abgerechnet werden.\nAlle anderen bleiben erhalten.")
-        # TODO Save and restore settings
         self.aMinimumBox.setValue(self.mNFCoffee.minimumCoffees())
         self.aMinimumBox.valueChanged.connect(self.updateMinimumCoffees)
         self.toolbarOptions.addWidget(self.aMinimumBox)
         self.toolbarOptions.addSeparator()
 
+        #User-Options
+        self.toolbarUser = self.addToolBar('User')
+        self.toolbarUser.setFloatable(False)
+        self.aAddUser = QAction(QIcon('icons/add_user.png'), 'User hinzufügen', self)
+        self.aAddUser.setShortcut('Ctrl++')
+        self.aAddUser.triggered.connect(self.addUser)
+        self.toolbarUser.addAction(self.aAddUser)
+        self.aDeleteUser = QAction(QIcon('icons/delete_user.png'), 'User entfernen', self)
+        self.aDeleteUser.setShortcut('Ctrl+-')
+        self.aDeleteUser.triggered.connect(self.deleteUser)
+        self.toolbarUser.addAction(self.aDeleteUser)
+
         #Save the settings
         self.restoreSettings()
 
         #init the Table
-        self.mMainWidget.initTable(self.mNFCoffee.getData)
+        self.mMainWidget.initTable(self.mNFCoffee.getData())
         self.mMainWidget.recalcAmount(self.mNFCoffee.price())
         self.mMainWidget.markMinimumCoffees(self.mNFCoffee.minimumCoffees())
 
         #Show all errors
-        self.mMainWidget.logText("\n".join(self.mNFCoffee.getErrors()))
+        self.mMainWidget.logText("\n".join(self.mNFCoffee.getMessages()))
 
     def closeEvent(self, evnt):
         self.saveSettings()
         super(MyMainWindow, self).closeEvent(evnt)
 
     def onContextMenu(self, point):
-        treeItem=self.mMainWidget.mTable.itemAt(point)
-        #find the toplevel item
-        while treeItem.parent():
-            treeItem=treeItem.parent()
-        name=treeItem.child(0).text(1)
-        print("ok "+name)
+        #treeItem=self.mMainWidget.mTable.itemAt(point)
 
-        result = self.mPopMenu.exec_( self.mMainWidget.mTable.mapToGlobal(point) )
-        for menuItem in self.mActions:
-            if menuItem == result:
-                print("Popup found: "+result.text())
-
+        #result = self.mPopMenu.exec_( self.mMainWidget.mTable.mapToGlobal(point) )
+        #for menuItem in self.mActions:
+        #   if menuItem == result:
+         #       print("Popup found: "+result.text())
+        pass
     def onMainMenu(self, action):
-        QMessageBox.critical(None, "Fehler Hauptmenü",
-                "<h2>:-( TODO</h2>")
+        pass
+
 
     def initMenus(self):
-        self.mActions.append(QAction("Klick",self))
-        self.mPopMenu.addAction(self.mActions[-1])
+        #self.mActions.append(QAction("Klick",self))
+        #self.mPopMenu.addAction(self.mActions[-1])
+
         mainFile = QMenu("Datei",self)
-        mainFile.addAction(QAction(u"SD-Karte auswählen",mainFile))
+        aOpenSdCard=QAction(u"SD-Karte auswählen",mainFile)
+        aOpenSdCard.triggered.connect(self.setSdCardPath)
+        mainFile.addAction(aOpenSdCard)
         self.mMainMenu.addMenu(mainFile)
+
+    def setSdCardPath(self):
+        sdPath=QFileDialog.getExistingDirectory(self,"Wählen sie das Wurzelverzeichnis der SD-Karte")
+        if sdPath is not None:
+            self.mNFCoffee.setSdPath(sdPath)
+            self.refreshTableView()
 
     def addUser(self):
         dia = AddUserDialog()
-        dia.exec_()
+        if dia.exec_() == QDialog.Accepted:
+            success, text = self.mNFCoffee.addUser(dia.getUUID(), dia.getName())
+            self.mMainWidget.logText(text)
+            if not success:
+                QMessageBox.critical(self, "FEHLER", text)
+
+        #After we added the user, we refresh the view
+        self.refreshTableView()
+
     def deleteUser(self):
         users=[]
-        for user in self.mNFCoffee.getData:
+        for user in self.mNFCoffee.getData():
             users.append(user['uuid'] + " - " + user['name'])
         item=QInputDialog.getItem(self,"Benutzer löschen",
                                   "<img src='icons/delete_user.png'/> User löschen<br>Dieser Vorgang kann nicht"
@@ -305,19 +320,46 @@ class MyMainWindow(QMainWindow):
 
         if result== QDialogButtonBox.Ok:
             self.mNFCoffee.deleteUser(item[0].split(" - ")[0])
+        #aftert we deleted the user. Refresh the table:
+        self.refreshTableView()
 
     def createReport(self):
         filename=QFileDialog.getSaveFileName(self,
                                     "Wähle einen Speicherort",
                                     'Abrechnung_'+time.strftime("%Y-%m-%d_%H-%M-%S"))
-        self.mNFCoffee.export(filename)
+        if filename:
+            try:
+                self.mNFCoffee.export(filename)
+            except Exception as e:
+                self.mMainWidget.logText("createReport"+str(e))
 
-        QMessageBox.information(self,"Export erledigt",
-                                '''Die Daten wuredn exportiert.<br/>
-                                <b>Achtung:</b> Alle User, die die Mindestanzahl an Kaffees nicht erreicht haben
-                                wurden zurückgeschrieben, sodass ihre bisher getrunkenen Kaffees für den nächsten
-                                 Monat erhalten bleiben.
-                                ''')
+             #Show all errors
+            self.mMainWidget.logText("\n".join(self.mNFCoffee.getMessages()))
+
+            QMessageBox.information(self,"Export erledigt",
+                                    '''<h3>Die Daten wurden exportiert.</h3><br/>
+                                    <b>Hinweis:</b> Alle UsereadDatar, die die Mindestanzahl an Kaffees nicht erreicht haben
+                                    wurden zurückgeschrieben, sodass ihre bisher getrunkenen Kaffees für den nächsten
+                                     Monat erhalten bleiben.
+                                    ''')
+            self.refreshTableView()
+        else:
+            self.mMainWidget.logText("Export abgebrochen...")
+
+    def refreshTableView(self):
+        try:
+            self.mNFCoffee.readData()
+        except Exception as e:
+            self.mMainWidget.logText("refreshTableView 1"+str(e))
+        try:
+            self.mMainWidget.initTable(self.mNFCoffee.getData())
+        except Exception as e:
+            self.mMainWidget.logText("refreshTableView 2"+str(e))
+
+        self.mMainWidget.recalcAmount(self.mNFCoffee.price())
+        self.mMainWidget.markMinimumCoffees(self.mNFCoffee.minimumCoffees())
+        self.mMainWidget.logText("Liste geladen...")
+
 
     def updatePrice(self, price):
         self.mNFCoffee.setPrice(price)
@@ -330,7 +372,6 @@ class MyMainWindow(QMainWindow):
     def saveSettings(self):
         config = configparser.ConfigParser()
         config.read('NFCoffee.INI')
-        #TODO all Config
         config['COFFEE']={}
         config['COFFEE']['price'] = str(self.mNFCoffee.price())
         config['COFFEE']['minimumCoffees'] = str(self.mNFCoffee.minimumCoffees())
@@ -344,7 +385,6 @@ class MyMainWindow(QMainWindow):
         config = configparser.ConfigParser()
         config.read('NFCoffee.INI')
         self.mMainWidget.logText("Reading Ini File...")
-        #TODO all Config
         self.aPriceBox.setValue(float(config['COFFEE']['price']))
         self.aMinimumBox.setValue(int(config['COFFEE']['minimumCoffees']))
 
