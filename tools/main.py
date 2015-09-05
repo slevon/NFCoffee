@@ -58,7 +58,7 @@ class AddUserDialog(QDialog):
 
 
     def getUUID(self):
-        return self.mUuidLineEdit.text().upper()
+        return self.mUuidLineEdit.text().upper
 
     def getName(self):
         return self.mNameEdit.text()
@@ -182,14 +182,15 @@ class MyMainWindow(QMainWindow):
         #We have our working Class, that will do all the work on the files:
         #
         self.mNFCoffee = NFCoffee()
-        try:
-            self.mNFCoffee.readData()
-        except Exception as e:
-            self.mMainWidget.logText("MyMainWindow.____init__"+str(e))
 
         self.mMainWidget = MainWidget(self)
         self.setCentralWidget(self.mMainWidget)
         self.resize(600, 400)
+
+        try:
+            self.mNFCoffee.readData()
+        except Exception as e:
+            self.mMainWidget.logText("MyMainWindow.____init__"+str(e))
 
         self.mPopMenu = QMenu()
         self.mMainMenu = self.menuBar()
@@ -306,25 +307,24 @@ class MyMainWindow(QMainWindow):
         users=[]
         for user in self.mNFCoffee.getData():
             users.append(user['uuid'] + " - " + user['name'])
-        item=QInputDialog.getItem(self,"Benutzer löschen",
+        item = QInputDialog.getItem(self,"Benutzer löschen",
                                   "<img src='icons/delete_user.png'/> User löschen<br>Dieser Vorgang kann nicht"
                                   "rückgangig gemacht werden ",
                                   users , editable = False)
-        # TODO Delete user function
-        result=QMessageBox.warning(None, "Löschen bestätigen",
+        result = QMessageBox.warning(None, "Löschen bestätigen",
                 "<h2>Löschen?</h2>Sind sie sicher das sie den User: <b>"
                 + item[0]
                 + "</b> löschen wollten?<br/>"
                 "Dieser Vorgang kann nicht rückgängig gemacht werden",
                 QDialogButtonBox.Ok, QDialogButtonBox.Cancel)
 
-        if result== QDialogButtonBox.Ok:
+        if result == QDialogButtonBox.Ok:
             self.mNFCoffee.deleteUser(item[0].split(" - ")[0])
         #aftert we deleted the user. Refresh the table:
         self.refreshTableView()
 
     def createReport(self):
-        filename=QFileDialog.getSaveFileName(self,
+        filename = QFileDialog.getSaveFileName(self,
                                     "Wähle einen Speicherort",
                                     'Abrechnung_'+time.strftime("%Y-%m-%d_%H-%M-%S"))
         if filename:
@@ -372,7 +372,7 @@ class MyMainWindow(QMainWindow):
     def saveSettings(self):
         config = configparser.ConfigParser()
         config.read('NFCoffee.INI')
-        config['COFFEE']={}
+        config['COFFEE'] = {}
         config['COFFEE']['price'] = str(self.mNFCoffee.price())
         config['COFFEE']['minimumCoffees'] = str(self.mNFCoffee.minimumCoffees())
 

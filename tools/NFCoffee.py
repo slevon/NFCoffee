@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 __author__ = 'Roman'
-
+'''
 ################################################
 #@NFCoffee
 # This Class provides all the functions that are needed to
@@ -52,7 +52,7 @@ __author__ = 'Roman'
 #           3) Recreate a COUNT.TXT with all the coffess that have a count smaller than
 #               minimumCoffees so the count could be increase in the next month.
 ################################################
-
+'''
 
 import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
@@ -275,6 +275,10 @@ class NFCoffee():
         return True, "User "+name+" und UUID "+UUID+" hinzugefügt"
 
     def writeUsersFile(self):
+        """
+        Writes the USER.TXT accordung to the current data
+        :raise Exception: File Errors
+        """
         try:
             with open(self.mSdPath + 'USER.TXT', 'w') as f:  # Use file to refer to the file object
                 for key, item in self.mData.items():
@@ -287,6 +291,10 @@ class NFCoffee():
 
 
     def setSdPath(self,sdPath):
+        """
+        Set the path to the SD-Card, that contains the COUNT.TXT and USER.TXT
+        :param sdPath: Path to the SD root
+        """
         if not sdPath.endswith("/"):
             sdPath += "/"
 
