@@ -21,6 +21,9 @@
 #include <Arduino.h>
 #include <SD.h>
 
+#include "main.h"
+
+
 
 class FileIo {
   
@@ -28,5 +31,8 @@ class FileIo {
     FileIo();
     void printDirectory(File dir, int numTabs);
     void readFile(char* name);
+    int getCount(char* filename,char* uuid);
+    boolean incCount(char* filename,char* uuid);
+    boolean addUuid(char* filename,char* uuid);
   
 };
